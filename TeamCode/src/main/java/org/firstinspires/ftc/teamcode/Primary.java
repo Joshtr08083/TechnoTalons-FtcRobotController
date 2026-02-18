@@ -155,7 +155,7 @@ public class Primary extends LinearOpMode {
                 dpadDownPressed = false;
             }
             intakeServoL.setPower((intakeServoActive)? -1 * intakeDirection: 0);
-            intakeServoR.setPower((intakeServoActive)? 1 * intakeDirection: 0);
+            intakeServoR.setPower((intakeServoActive)? intakeDirection: 0);
 
 
             // flywheel
