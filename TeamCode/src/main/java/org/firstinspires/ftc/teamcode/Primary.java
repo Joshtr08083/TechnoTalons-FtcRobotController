@@ -22,18 +22,14 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import java.util.List;
 
 /*
 =============================
     Gamepad Controls
 =============================
 - BALLS -
-    (A) TOGGLE - Intake Motor Cyliner Surgical Tubing Thing
+    (A) TOGGLE - Intake Motor Cylinder Surgical Tubing Thing
     (DPAD_D) TOGGLE - Intake Servos Sides
     (LEFT_TRIGGER) HOLD - Reverse intake motor and servos
     (RIGHT_TRIGGER) HOLD - Flywheel motor
@@ -69,11 +65,6 @@ public class Primary extends LinearOpMode {
     private boolean triggerPressed = false;
     private boolean flyWheelActive = false;
 
-    // reverses intake motors/servos
-    private int intakeDirection = 1;
-    private double servoMax = 0.6;
-    private double servoMin = 0.4;
-
     private void initialize() {
         frontLeft = hardwareMap.get(DcMotor.class, "front-left");
         frontRight = hardwareMap.get(DcMotor.class, "front-right");
@@ -96,6 +87,10 @@ public class Primary extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        double servoMax = 0.6;
+        double servoMin = 0.4;
+        int intakeDirection;
+
         initialize();
         waitForStart();
 
@@ -121,8 +116,8 @@ public class Primary extends LinearOpMode {
                     (drive + strafe - twist) // BR
             };
             double max = Math.abs(speeds[0]); // normalize values
-            for (int i = 0; i < speeds.length; i++ ) {
-                if (max < Math.abs(speeds[i])) max = Math.abs(speeds[i]);
+            for (double v : speeds) {
+                if (max < Math.abs(v)) max = Math.abs(v);
             }
             if (max > 1) {
                 for (int i = 0; i < speeds.length; i++) speeds[i] /= max;
