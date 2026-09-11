@@ -1,19 +1,21 @@
 package org.firstinspires.ftc.teamcode.utilities;
-import com.qualcomm.robotcore.hardware.Gamepad;
+
+import org.firstinspires.ftc.teamcode.utilities.triggers.Trigger;
+
 import java.util.ArrayList;
+import java.util.List;
 
+public class Controller {
+    private final List<Trigger> triggers = new ArrayList<>();
 
-public class Controller  {
-
-    private Gamepad gamepad1;
-    private ArrayList<Button> buttons = new ArrayList<>();
-
-    public Controller(Gamepad gamepad1) {
-        this.gamepad1 = gamepad1;
+    public Trigger add(Trigger trigger) {
+        triggers.add(trigger);
+        return trigger;
     }
 
-
     public void update() {
-
+        for (Trigger t : triggers) {
+            t.update();
+        }
     }
 }
