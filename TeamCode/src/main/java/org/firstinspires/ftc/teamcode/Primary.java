@@ -47,6 +47,7 @@ public class Primary extends LinearOpMode {
     private boolean triggerPressed = false;
     private boolean flyWheelActive = false;
 
+
     private void initialize() {
         frontLeft = hardwareMap.get(DcMotor.class, "front-left");
         frontRight = hardwareMap.get(DcMotor.class, "front-right");
