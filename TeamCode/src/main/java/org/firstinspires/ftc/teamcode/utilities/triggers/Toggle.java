@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.utilities.triggers;
 
+// toggle alternates between two actions depending on the state,
+// so press do A, press again do B, repeat
+// it triggers the same as rising edge
 public class Toggle implements TriggerBehavior {
     private final Runnable onToggleOn, onToggleOff;
     private boolean prevState = false;
