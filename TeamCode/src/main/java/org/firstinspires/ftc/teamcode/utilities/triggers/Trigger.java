@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.utilities.triggers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 public class Trigger {
     private final BooleanSupplier input;
@@ -10,6 +11,10 @@ public class Trigger {
 
     public Trigger(BooleanSupplier input) {
         this.input = input;
+    }
+
+    public Trigger(DoubleSupplier doubleInput, double threshold) {
+        input = () -> doubleInput.getAsDouble() > threshold;
     }
     public Trigger onRisingEdge(Runnable onTrigger) {
         behaviors.add(new RisingEdge(onTrigger));
