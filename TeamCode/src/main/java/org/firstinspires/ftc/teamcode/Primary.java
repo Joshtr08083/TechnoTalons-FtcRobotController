@@ -6,6 +6,9 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.teamcode.utilities.Controller;
+import org.firstinspires.ftc.teamcode.utilities.triggers.Trigger;
+
 /*
 =============================
     Gamepad Controls
@@ -28,10 +31,10 @@ public class Primary extends LinearOpMode {
     private DcMotor backLeft;
     private DcMotor frontLeft;
     private DcMotor frontRight;
-    // speed modifier for wheels (NTS: Maybe add control for variable speed)
+
+    // speed modifier for wheels
     private double speed = 1.0;
     private double flyWheelSpeed = 1.0;
-    private boolean xPressed = false;
 
     // intake/shooting
     private DcMotor flyWheel;
@@ -41,12 +44,11 @@ public class Primary extends LinearOpMode {
     private Servo flicker;
     private boolean intakeMotorActive = false;
     private boolean intakeServoActive = false;
-    private boolean gamepadAPressed = false;
-    private boolean dpadDownPressed = false;
-    private boolean yPressed = false;
-    private boolean triggerPressed = false;
+    private int intakeDirection = 1;
     private boolean flyWheelActive = false;
 
+    // manage event hooks for controller triggers
+    private final Controller controller = new Controller();
 
     private void initialize() {
         frontLeft = hardwareMap.get(DcMotor.class, "front-left");
@@ -72,110 +74,51 @@ public class Primary extends LinearOpMode {
     public void runOpMode() {
         double servoMax = 0.6;
         double servoMin = 0.4;
-        int intakeDirection;
 
         initialize();
         waitForStart();
 
         while (opModeIsActive()) {
-            // reverse intake direction (there's probably better ways to do this idk)
-            // reverse intake direction (there's probably better ways to do this idk)
-            if (gamepad1.left_trigger > 0.5) {
-                intakeDirection = -1;
-            }
-            else {
-                intakeDirection = 1;
-            }
-
-
             // omni wheel drive
-            double drive = -1 * gamepad1.left_stick_y;
-            double strafe = gamepad1.left_stick_x;
-            double twist = gamepad1.right_stick_x;
-            double[] speeds = {
-                    (drive + strafe + twist), // FL
-                    (drive - strafe - twist), // FR
-                    (drive - strafe + twist), // BL
-                    (drive + strafe - twist) // BR
-            };
-            double max = Math.abs(speeds[0]); // normalize values
-            for (double v : speeds) {
-                if (max < Math.abs(v)) max = Math.abs(v);
-            }
-            if (max > 1) {
-                for (int i = 0; i < speeds.length; i++) speeds[i] /= max;
-            }
-            frontLeft.setPower(speeds[0] * speed);
-            frontRight.setPower(speeds[1] * speed);
-            backLeft.setPower(speeds[2] * speed);
-            backRight.setPower(speeds[3] * speed);
+            mecanumDrive(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
 
+            // reverse intake direction
+            controller.add(new Trigger(() -> gamepad1.left_trigger, 0.5)
+                    .onHeld(() -> intakeDirection = -1,
+                            () -> intakeDirection = 1));
 
-            // intake motor
-            if (gamepad1.a) {
-                if (!gamepadAPressed) {
-                    gamepadAPressed = true;
-                    intakeMotorActive = !intakeMotorActive;
-                }
-            } else {
-                gamepadAPressed = false;
-            }
-            intake.setPower((intakeMotorActive)? -1 * intakeDirection: 0);
+            // intake motor toggle
+            controller.add(new Trigger(() -> gamepad1.a)
+                    .onRisingEdge(() -> intakeMotorActive = !intakeMotorActive));
 
+            // intake servos toggle
+            controller.add(new Trigger(() -> gamepad1.dpad_down)
+                    .onRisingEdge(() -> intakeServoActive = !intakeServoActive));
 
-            // intake servos
-            if (gamepad1.dpad_down) {
-                if (!dpadDownPressed) {
-                    dpadDownPressed = true;
-                    intakeServoActive = !intakeServoActive;
-                }
-            } else {
-                dpadDownPressed = false;
-            }
-            intakeServoL.setPower((intakeServoActive)? -1 * intakeDirection: 0);
-            intakeServoR.setPower((intakeServoActive)? intakeDirection: 0);
+            // flywheel enable
+            controller.add(new Trigger(() -> gamepad1.right_trigger > 0.7)
+                    .onRisingEdge(() -> flyWheelActive = true)
+                    .onHeld(()->{}, () -> flyWheelActive = false));
 
-
-            // flywheel
-            if (gamepad1.right_trigger > 0.7) {
-                if (!triggerPressed) {
-                    triggerPressed = true;
-                    flyWheelActive = !flyWheelActive;
-                }
-            }
-            else {
-                triggerPressed = false;
-            }
-            flyWheel.setPower(flyWheelActive?flyWheelSpeed:0);
-
-
-            // flicker
-            if (gamepad2.dpad_up) {
-                flicker.setPosition(servoMax);
-
-            } else {
-                flicker.setPosition(servoMin);
-            }
-
+            // flicker (hold)
+            controller.add(new Trigger(() -> gamepad2.dpad_up)
+                    .onHeld(() -> flicker.setPosition(servoMax),
+                            () -> flicker.setPosition(servoMin)));
 
             // slow mode for drive
-            if (gamepad2.x) {
-                if (!xPressed) {
-                    xPressed = true;
-                    speed = (speed >= 1)?0.3:1;
-                }
-            } else {
-                xPressed = false;
-            }
+            controller.add(new Trigger(() -> gamepad2.x))
+                    .onRisingEdge(() -> speed = (speed >= 1)?0.3:1);
 
-            if (gamepad2.y) {
-                if (!yPressed) {
-                    yPressed = true;
-                    flyWheelSpeed = (flyWheelSpeed >= 1)?0.5:1;
-                }
-            } else {
-                yPressed = false;
-            }
+            // slow mode for flywheels
+            controller.add(new Trigger(() -> gamepad2.y)
+                    .onRisingEdge(() -> flyWheelSpeed = (flyWheelSpeed >= 1)?0.5:1));
+
+
+            controller.update();
+            flyWheel.setPower(flyWheelActive?flyWheelSpeed:0);
+            intakeServoL.setPower((intakeServoActive)? -1 * intakeDirection: 0);
+            intakeServoR.setPower((intakeServoActive)? intakeDirection: 0);
+            intake.setPower((intakeMotorActive)? -1 * intakeDirection: 0);
 
             telemetry.addData("Intake Motor", (intakeMotorActive)? "Active": "Inactive");
             telemetry.addData("Intake Servos", (intakeServoActive)? "Active": "Inactive");
@@ -185,5 +128,27 @@ public class Primary extends LinearOpMode {
             telemetry.addData("Status", "Running");
             telemetry.update();
         }
+    }
+
+    void mecanumDrive(double strafe, double drive, double twist) {
+        drive *= -1;
+
+        double[] speeds = {
+                (drive + strafe + twist), // FL
+                (drive - strafe - twist), // FR
+                (drive - strafe + twist), // BL
+                (drive + strafe - twist) // BR
+        };
+        double max = Math.abs(speeds[0]); // normalize values
+        for (double v : speeds) {
+            if (max < Math.abs(v)) max = Math.abs(v);
+        }
+        if (max > 1) {
+            for (int i = 0; i < speeds.length; i++) speeds[i] /= max;
+        }
+        frontLeft.setPower(speeds[0] * speed);
+        frontRight.setPower(speeds[1] * speed);
+        backLeft.setPower(speeds[2] * speed);
+        backRight.setPower(speeds[3] * speed);
     }
 }
