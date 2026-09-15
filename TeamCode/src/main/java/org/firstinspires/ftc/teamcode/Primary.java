@@ -83,35 +83,35 @@ public class Primary extends LinearOpMode {
             mecanumDrive(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
 
             // reverse intake direction
-            controller.add(new Trigger(() -> gamepad1.left_trigger, 0.5)
+            controller.addTrigger(() -> gamepad1.left_trigger, 0.5)
                     .onHeld(() -> intakeDirection = -1,
-                            () -> intakeDirection = 1));
+                            () -> intakeDirection = 1);
 
             // intake motor toggle
-            controller.add(new Trigger(() -> gamepad1.a)
-                    .onRisingEdge(() -> intakeMotorActive = !intakeMotorActive));
+            controller.addTrigger(() -> gamepad1.a)
+                    .onRisingEdge(() -> intakeMotorActive = !intakeMotorActive);
 
             // intake servos toggle
-            controller.add(new Trigger(() -> gamepad1.dpad_down)
-                    .onRisingEdge(() -> intakeServoActive = !intakeServoActive));
+            controller.addTrigger(() -> gamepad1.dpad_down)
+                    .onRisingEdge(() -> intakeServoActive = !intakeServoActive);
 
             // flywheel enable
-            controller.add(new Trigger(() -> gamepad1.right_trigger > 0.7)
+            controller.addTrigger(() -> gamepad1.right_trigger > 0.7)
                     .onRisingEdge(() -> flyWheelActive = true)
-                    .onHeld(()->{}, () -> flyWheelActive = false));
+                    .onHeld(()->{}, () -> flyWheelActive = false);
 
             // flicker (hold)
-            controller.add(new Trigger(() -> gamepad2.dpad_up)
+            controller.addTrigger(() -> gamepad2.dpad_up)
                     .onHeld(() -> flicker.setPosition(servoMax),
-                            () -> flicker.setPosition(servoMin)));
+                            () -> flicker.setPosition(servoMin));
 
             // slow mode for drive
-            controller.add(new Trigger(() -> gamepad2.x))
+            controller.addTrigger(() -> gamepad2.x)
                     .onRisingEdge(() -> speed = (speed >= 1)?0.3:1);
 
             // slow mode for flywheels
-            controller.add(new Trigger(() -> gamepad2.y)
-                    .onRisingEdge(() -> flyWheelSpeed = (flyWheelSpeed >= 1)?0.5:1));
+            controller.addTrigger(() -> gamepad2.y)
+                    .onRisingEdge(() -> flyWheelSpeed = (flyWheelSpeed >= 1)?0.5:1);
 
 
             controller.update();
